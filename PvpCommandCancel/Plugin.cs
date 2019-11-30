@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using Terraria;
 using TerrariaApi.Server;
 using TShockAPI;
+using TShockAPI.Hooks;
+
 namespace PvpCommandCancel
 {
     public class Plugin : TerrariaPlugin
@@ -16,19 +18,34 @@ namespace PvpCommandCancel
         public override string Description => "Cancel command use in PvP.";
 
         Config Config;
+        
         public Plugin(Main game) : base(game)
         {
 
         }
+
         public override void Initialize()
         {
             ServerApi.Hooks.GameInitialize.Register(this, OnInitialize);
+            PlayerHooks.PlayerCommand += OnPlayerCommand;
         }
 
         private void OnInitialize(EventArgs args)
         {
             Config = Config.Read();
-            Commands.ChatCommands.Add(new Command("pvpcmdcancel.configcmd", ConfigCmd, "/pcc", "/pvpcmdcancel"));
+            Commands.ChatCommands.Add(new Command("pcc.configcmd", ConfigCmd, "/pcc", "/pvpcmdcancel"));
+            
+        }
+
+        private void OnPlayerCommand(PlayerCommandEventArgs args)
+        {
+            if (!args.Player.TPlayer.hostile || args.Player.HasPermission("pcc.ignore")) 
+                return;
+            if (Config.UnallowedCommands.First(cmd => cmd == args.CommandName) != null)
+            {
+                args.Player.SendErrorMessage("This command does not allowed in PvP!");
+                args.Handled = true;
+            }
         }
 
         private void ConfigCmd(CommandArgs args)
@@ -57,6 +74,8 @@ namespace PvpCommandCancel
                     }
                     break;
                 case "reset":
+                    Config = Config.Create();
+                    args.Player.SendSuccessMessage($"Succesfully reset config file.");
                     break;
             }
         }

@@ -11,6 +11,7 @@ using TShockAPI.Hooks;
 
 namespace PvpCommandCancel
 {
+    [ApiVersion(2,1)]
     public class Plugin : TerrariaPlugin
     {
         public override string Name => "PvpCommandCancel";

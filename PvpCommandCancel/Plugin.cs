@@ -11,7 +11,7 @@ using TShockAPI.Hooks;
 
 namespace PvpCommandCancel
 {
-    [ApiVersion(2,1)]
+    [ApiVersion(2, 1)]
     public class Plugin : TerrariaPlugin
     {
         public override string Name => "PvpCommandCancel";
@@ -20,7 +20,7 @@ namespace PvpCommandCancel
         public override string Description => "Cancel command use in PvP.";
 
         Config Config;
-        
+      
         public Plugin(Main game) : base(game)
         {
 
@@ -37,19 +37,13 @@ namespace PvpCommandCancel
         {
             Config = Config.Read();
             Commands.ChatCommands.Add(new Command("pcc.configcmd", ConfigCmd, "/pcc", "/pvpcmdcancel"));
-            
+
         }
         private void OnGetData(GetDataEventArgs args)
         {
-            if (args.MsgID != PacketTypes.TogglePvp) return;
+            if (args.MsgID != PacketTypes.TogglePvp || !Config.GodmodeAutoDisable) return;
             TSPlayer plr = TShock.Players[args.Msg.whoAmI];
-            bool pvp = false;
-            using (var reader = new BinaryReader(new MemoryStream(args.Msg.readBuffer)))
-            {
-                reader.ReadByte();
-                pvp = reader.ReadBoolean();
-            }
-            if (pvp && plr.GodMode)
+            if (plr.GodMode)
             {
                 plr.SendInfoMessage("Godmode auto disabled");
                 plr.GodMode = false;

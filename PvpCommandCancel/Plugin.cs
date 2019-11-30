@@ -84,6 +84,8 @@ namespace PvpCommandCancel
         {
             if (disposing)
             {
+                ServerApi.Hooks.GameInitialize.Deregister(this, OnInitialize);
+                PlayerHooks.PlayerCommand -= OnPlayerCommand;
             }
             base.Dispose(disposing);
         }

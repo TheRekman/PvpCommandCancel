@@ -19,6 +19,7 @@ namespace PvpCommandCancel
                 "tp",
                 "warp"
             };
+        public bool GodmodeAutoDisable = true;
 
         public static Config Read()
         {

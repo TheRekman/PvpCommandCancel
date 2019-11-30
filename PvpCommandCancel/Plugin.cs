@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Terraria;
@@ -27,6 +28,7 @@ namespace PvpCommandCancel
         public override void Initialize()
         {
             ServerApi.Hooks.GameInitialize.Register(this, OnInitialize);
+            ServerApi.Hooks.NetGetData.Register(this, OnGetData);
             PlayerHooks.PlayerCommand += OnPlayerCommand;
         }
 
@@ -35,6 +37,22 @@ namespace PvpCommandCancel
             Config = Config.Read();
             Commands.ChatCommands.Add(new Command("pcc.configcmd", ConfigCmd, "/pcc", "/pvpcmdcancel"));
             
+        }
+        private void OnGetData(GetDataEventArgs args)
+        {
+            if (args.MsgID != PacketTypes.TogglePvp) return;
+            TSPlayer plr = TShock.Players[args.Msg.whoAmI];
+            bool pvp = false;
+            using (var reader = new BinaryReader(new MemoryStream(args.Msg.readBuffer)))
+            {
+                reader.ReadByte();
+                pvp = reader.ReadBoolean();
+            }
+            if (pvp && plr.GodMode)
+            {
+                plr.SendInfoMessage("Godmode auto disabled");
+                plr.GodMode = false;
+            }
         }
 
         private void OnPlayerCommand(PlayerCommandEventArgs args)
@@ -85,6 +103,7 @@ namespace PvpCommandCancel
             if (disposing)
             {
                 ServerApi.Hooks.GameInitialize.Deregister(this, OnInitialize);
+                ServerApi.Hooks.NetGetData.Deregister(this, OnGetData);
                 PlayerHooks.PlayerCommand -= OnPlayerCommand;
             }
             base.Dispose(disposing);
